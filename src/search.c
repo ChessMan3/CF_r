@@ -477,10 +477,9 @@ void thread_search(Pos *pos)
             mainThread.failedLow = 1;
             Signals.stopOnPonderhit = 0;
           }
-        } else if (bestValue >= beta) {
-          alpha = (alpha + beta) / 2;
+        } else if (bestValue >= beta)
           beta = min(bestValue + delta, VALUE_INFINITE);
-        } else
+          else
           break;
 
         delta += delta / 4 + 5;
