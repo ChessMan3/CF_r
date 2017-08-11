@@ -119,7 +119,7 @@ INLINE Score pawn_evaluate(const Pos *pos, PawnEntry *e, const int Us)
     e->pawnAttacksSpan[Us] |= pawn_attack_span(Us, s);
 
     // Flag the pawn
-    opposed    = !!(theirPawns & forward_bb(Us, s));
+    opposed    = !!(theirPawns & forward_file_bb(Us, s));
     stoppers   = theirPawns & passed_pawn_mask(Us, s);
     lever      = theirPawns & PawnAttacks[Us][s];
     leverPush  = theirPawns & PawnAttacks[Us][s + Up];
@@ -150,7 +150,7 @@ INLINE Score pawn_evaluate(const Pos *pos, PawnEntry *e, const int Us)
     // which could become passed after one or two pawn pushes when they
     // are not attacked more times than defended.
     if (   !(stoppers ^ lever ^ leverPush)
-        && !(ourPawns & forward_bb(Us, s))
+        && !(ourPawns & forward_file_bb(Us, s))
         && popcount(supported) >= popcount(lever)
         && popcount(phalanx)   >= popcount(leverPush))
       e->passedPawns[Us] |= sq_bb(s);
@@ -226,7 +226,7 @@ INLINE Value shelter_storm(const Pos *pos, Square ksq, const int Us)
   
   enum { BlockedByKing, Unopposed, BlockedByPawn, Unblocked };
 
-  Bitboard b = pieces_p(PAWN) & (in_front_bb(Us, rank_of(ksq)) | rank_bb_s(ksq));
+  Bitboard b = pieces_p(PAWN) & (forward_ranks_bb(Us, ksq) | rank_bb_s(ksq));
   Bitboard ourPawns = b & pieces_c(Us);
   Bitboard theirPawns = b & pieces_c(Them);
   Value safety = MaxSafetyBonus;
