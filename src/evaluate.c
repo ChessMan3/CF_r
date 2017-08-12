@@ -101,6 +101,13 @@ static const Score Outpost[][2] = {
   { S( 9, 2), S(14, 4) }  // Bishop
 };
 
+ // BadBishop[] contains a penalty according to the number
+ // of our pawns on the same square color as the bishop.
+ const Score BadBishop[] = {
+  S( 0,  0), S( 9,  8), S(12, 22), S(28, 34), S(30, 45),
+  S(40, 56), S(47, 76), S(59, 79), S(61, 99)
+ };
+
 // RookOnFile[semiopen/open] contains bonuses for each rook when there is
 // no friendly pawn on the rook file.
 static const Score RookOnFile[2] = { S(20, 7), S(45, 20) };
@@ -138,7 +145,6 @@ const Score KingProtector[] = { S(-3, -5), S(-4, -3), S(-3, 0), S(-1, 1) };
 
 // Assorted bonuses and penalties used by evaluation
 static const Score MinorBehindPawn     = S( 16,  0);
-static const Score BishopPawns         = S(  8, 12);
 static const Score RookOnPawn          = S(  8, 24);
 static const Score TrappedRook         = S( 92,  0);
 static const Score WeakQueen           = S( 50, 10);
@@ -271,7 +277,7 @@ INLINE Score evaluate_piece(const Pos *pos, EvalInfo *ei, Score *mobility,
 
       // Penalty for pawns on the same color square as the bishop
       if (Pt == BISHOP)
-        score -= BishopPawns * pawns_on_same_color_squares(ei->pe, Us, s);
+        score -= BadBishop[pawns_on_same_color_squares(ei->pe, Us, s)];
 
       // An important Chess960 pattern: A cornered bishop blocked by a friendly
       // pawn diagonally in front of it is a very serious problem, especially
