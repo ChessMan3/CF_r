@@ -112,7 +112,7 @@ static struct MagicInit rook_init[64] = {
   { 0x0010020008040004ull, 11841 },
   { 0xfffdfefff7fbfff7ull, 21112 },
   { 0xfebf7dfff8fefff9ull, 44214 },
-  { 0xc00000ffe001ffe0ull, 57925 },
+  { 0xc00000ffe001ffe0ull, 57925 }, 
   { 0x4af01f00078007c3ull, 29574 },
   { 0xbffbfafffb683f7full, 17309 },
   { 0x0807f67ffa102040ull, 40143 },
@@ -147,7 +147,7 @@ static struct MagicInit rook_init[64] = {
   { 0x48300007e8080c02ull, 78538 },
   { 0xafe0000fff780402ull, 28745 },
   { 0xee73fffbffbb77feull,  8555 },
-  { 0x0002000308482882ull,  1009 }
+  { 0x0002000308482882ull,  1009 },
 };
 
 typedef unsigned (Fn)(Square, Bitboard);
