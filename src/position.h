@@ -152,7 +152,7 @@ struct Pos {
   uint64_t nodes;
   uint64_t tb_hits;
   int PVIdx, PVLast;
-  int maxPly;
+  int selDepth;
   Depth rootDepth;
   Depth completedDepth;
 

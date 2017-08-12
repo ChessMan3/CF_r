@@ -53,8 +53,8 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
   }
 
   // Used to send selDepth info to GUI
-  if (PvNode && pos->maxPly < ss->ply)
-    pos->maxPly = ss->ply;
+  if (PvNode && pos->selDepth < ss->ply)
+    pos->selDepth = ss->ply;
 
   if (!rootNode) {
     // Step 2. Check for aborted search and immediate draw
@@ -563,6 +563,7 @@ moves_loop: // When in check search starts from here.
       // PV move or new best move ?
       if (moveCount == 1 || value > alpha) {
         rm->score = value;
+        rm->selDepth = pos->selDepth;
         rm->pv_size = 1;
 
         assert((ss+1)->pv);

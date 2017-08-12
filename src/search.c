@@ -428,6 +428,9 @@ void thread_search(Pos *pos)
         pos->PVLast = PVLast;
       }
 
+      // Reset UCI info selDepth for each depth and each PV line
+      pos->selDepth = 0;
+
       // Reset aspiration window starting size
       if (pos->rootDepth >= 5 * ONE_PLY) {
         delta = (Value)18;
@@ -795,7 +798,7 @@ static void uci_print_pv(Pos *pos, Depth depth, Value alpha, Value beta)
     }
 
     printf("info depth %d seldepth %d multipv %d score %s",
-           d / ONE_PLY, pos->maxPly, (int)i + 1, uci_value(buf, v));
+           d / ONE_PLY, rm->move[i].selDepth, (int)i + 1, uci_value(buf, v));
 
     if (!tb && i == PVIdx)
       printf("%s", v >= beta ? " lowerbound" : v <= alpha ? " upperbound" : "");
@@ -924,7 +927,7 @@ void start_thinking(Pos *root)
 
   for (int idx = 0; idx < Threads.num_threads; idx++) {
     Pos *pos = Threads.pos[idx];
-    pos->maxPly = 0;
+    pos->selDepth = 0;
     pos->rootDepth = DEPTH_ZERO;
     pos->nodes = pos->tb_hits = 0;
     RootMoves *rm = pos->rootMoves;
@@ -933,6 +936,7 @@ void start_thinking(Pos *root)
       rm->move[i].pv[0] = list[i].move;
       rm->move[i].score = -VALUE_INFINITE;
       rm->move[i].previousScore = -VALUE_INFINITE;
+      rm->move[i].selDepth = 0;
       rm->move[i].TBRank = list[i].value;
     }
     memcpy(pos, root, offsetof(Pos, moveList));
