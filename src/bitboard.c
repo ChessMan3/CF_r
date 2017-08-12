@@ -24,7 +24,7 @@
 #ifndef USE_POPCNT
 uint8_t PopCnt16[1 << 16];
 #endif
-int SquareDistance[64][64];
+uint8_t SquareDistance[64][64];
 
 static int RookDeltas[] = { DELTA_N,  DELTA_E,  DELTA_S,  DELTA_W  };
 static int BishopDeltas[] = { DELTA_NE, DELTA_SE, DELTA_SW, DELTA_NW };
@@ -49,6 +49,8 @@ static Bitboard sliding_attack(int deltas[], Square sq, Bitboard occupied)
 #include "magic-fancy.c"
 #elif defined(MAGIC_PLAIN)
 #include "magic-plain.c"
+#elif defined(MAGIC_BLACK)
+#include "magic-black.c"
 #elif defined(BMI2_FANCY)
 #include "bmi2-fancy.c"
 #elif defined(BMI2_PLAIN)
@@ -205,7 +207,7 @@ void bitboards_init()
 
   for (int c = 0; c < 2; c++)
     for (Square s = 0; s < 64; s++) {
-      ForwardFileBB[c][s]      = ForwardRanksBB[c][rank_of(s)] & FileBB[file_of(s)];
+      ForwardFileBB[c][s]  = ForwardRanksBB[c][rank_of(s)] & FileBB[file_of(s)];
       PawnAttackSpan[c][s] = ForwardRanksBB[c][rank_of(s)] & AdjacentFilesBB[file_of(s)];
       PassedPawnMask[c][s] = ForwardFileBB[c][s] | PawnAttackSpan[c][s];
     }

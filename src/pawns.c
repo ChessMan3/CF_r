@@ -187,13 +187,13 @@ void pawn_init(void)
 {
   static const int Seed[8] = { 0, 13, 24, 18, 76, 100, 175, 330 };
 
-  for (int opposed = 0; opposed <= 1; opposed++)
-    for (int phalanx = 0; phalanx <= 1; phalanx++)
+  for (int opposed = 0; opposed < 2; opposed++)
+    for (int phalanx = 0; phalanx < 2; phalanx++)
       for (int support = 0; support <= 2; support++)
         for (int r = RANK_2; r < RANK_8; ++r) {
           int v = 17 * support;
           v += (Seed[r] + (phalanx ? (Seed[r + 1] - Seed[r]) / 2 : 0)) >> opposed;
-          Connected[opposed][phalanx][support][r] = make_score(v, v * (r - 2) / 4);
+          Connected[opposed][phalanx][support][r] = make_score(v, v * (r-2) / 4);
       }
 }
 
@@ -219,7 +219,7 @@ INLINE Value shelter_storm(const Pos *pos, Square ksq, const int Us)
   
   enum { BlockedByKing, Unopposed, BlockedByPawn, Unblocked };
 
-  Bitboard b = pieces_p(PAWN) & (forward_ranks_bb(Us, ksq) | rank_bb_s(ksq));
+  Bitboard b = pieces_p(PAWN) & (forward_ranks_bb(Us, rank_of(ksq)) | rank_bb_s(ksq));
   Bitboard ourPawns = b & pieces_c(Us);
   Bitboard theirPawns = b & pieces_c(Them);
   Value safety = MaxSafetyBonus;
@@ -229,7 +229,7 @@ INLINE Value shelter_storm(const Pos *pos, Square ksq, const int Us)
     b = ourPawns & file_bb(f);
     uint32_t rkUs = b ? relative_rank_s(Us, backmost_sq(Us, b)) : RANK_1;
 
-    b  = theirPawns & file_bb(f);
+    b = theirPawns & file_bb(f);
     uint32_t rkThem = b ? relative_rank_s(Us, frontmost_sq(Them, b)) : RANK_1;
 
     int d = min(f, FILE_H - f);

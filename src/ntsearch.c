@@ -30,7 +30,7 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
   int ttHit, inCheck, givesCheck, singularExtensionNode, improving;
   int captureOrPromotion, doFullDepthSearch, moveCountPruning, skipQuiets;
   int ttCapture;
-  Piece moved_piece;
+  Piece movedPiece;
   int moveCount, quietCount;
 
   // Step 1. Initialize node
@@ -53,8 +53,8 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
   }
 
   // Used to send selDepth info to GUI
-  if (PvNode && pos->maxPly < ss->ply)
-    pos->maxPly = ss->ply;
+  if (PvNode && pos->selDepth < ss->ply)
+    pos->selDepth = ss->ply;
 
   if (!rootNode) {
     // Step 2. Check for aborted search and immediate draw
@@ -167,8 +167,8 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
       eval = ss->staticEval = evaluate(pos);
 
     // Can ttValue be used as a better position evaluation?
-    if (  ttValue != VALUE_NONE
-      && (tte_bound(tte) & (ttValue > eval ? BOUND_LOWER : BOUND_UPPER)))
+    if (ttValue != VALUE_NONE)
+      if (tte_bound(tte) & (ttValue > eval ? BOUND_LOWER : BOUND_UPPER))
         eval = ttValue;
   } else {
     eval = ss->staticEval =
@@ -254,7 +254,9 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
       &&  abs(beta) < VALUE_MATE_IN_MAX_PLY) {
 
     Value rbeta = min(beta + 200, VALUE_INFINITE);
+    Depth rdepth = depth - 4 * ONE_PLY;
 
+    assert(rdepth >= ONE_PLY);
     assert(move_is_ok((ss-1)->currentMove));
 
     mp_init_pc(pos, ttMove, rbeta - ss->staticEval);
@@ -263,9 +265,8 @@ Value search_NonPV(Pos *pos, Stack *ss, Value alpha, Depth depth, int cutNode)
       if (is_legal(pos, move)) {
         ss->currentMove = move;
         ss->history = &(*pos->counterMoveHistory)[moved_piece(move)][to_sq(move)];
-        assert(depth >= 5 * ONE_PLY);
         do_move(pos, move, gives_check(pos, ss, move));
-        value = -search_NonPV(pos, ss+1, -rbeta, depth - 4 * ONE_PLY, !cutNode);
+        value = -search_NonPV(pos, ss+1, -rbeta, rdepth, !cutNode);
         undo_move(pos, move);
         if (value >= rbeta)
           return value;
@@ -350,7 +351,7 @@ moves_loop: // When in check search starts from here.
 
     extension = DEPTH_ZERO;
     captureOrPromotion = is_capture_or_promotion(pos, move);
-    moved_piece = moved_piece(move);
+    movedPiece = moved_piece(move);
 
     givesCheck = gives_check(pos, ss, move);
 
@@ -419,8 +420,8 @@ moves_loop: // When in check search starts from here.
 
         // Countermoves based pruning
         if (   lmrDepth < 3
-            && (*cmh )[moved_piece][to_sq(move)] < CounterMovePruneThreshold
-            && (*fmh )[moved_piece][to_sq(move)] < CounterMovePruneThreshold)
+            && (*cmh )[movedPiece][to_sq(move)] < CounterMovePruneThreshold
+            && (*fmh )[movedPiece][to_sq(move)] < CounterMovePruneThreshold)
           continue;
 
         // Futility pruning: parent node
@@ -459,7 +460,7 @@ moves_loop: // When in check search starts from here.
     // Update the current move (this must be done after singular extension
     // search)
     ss->currentMove = move;
-    ss->history = &(*pos->counterMoveHistory)[moved_piece][to_sq(move)];
+    ss->history = &(*pos->counterMoveHistory)[movedPiece][to_sq(move)];
 
     // Step 14. Make the move.
     do_move(pos, move, givesCheck);
@@ -492,9 +493,9 @@ moves_loop: // When in check search starts from here.
                  && !see_test(pos, make_move(to_sq(move), from_sq(move)), 0))
           r -= 2 * ONE_PLY;
 
-        ss->statScore =  (*cmh )[moved_piece][to_sq(move)]
-                       + (*fmh )[moved_piece][to_sq(move)]
-                       + (*fmh2)[moved_piece][to_sq(move)]
+        ss->statScore =  (*cmh )[movedPiece][to_sq(move)]
+                       + (*fmh )[movedPiece][to_sq(move)]
+                       + (*fmh2)[movedPiece][to_sq(move)]
                        + (*pos->history)[pos_stm() ^ 1][from_to(move)]
                        - 4000; // Correction factor.
 
@@ -563,6 +564,7 @@ moves_loop: // When in check search starts from here.
       // PV move or new best move ?
       if (moveCount == 1 || value > alpha) {
         rm->score = value;
+        rm->selDepth = pos->selDepth;
         rm->pv_size = 1;
 
         assert((ss+1)->pv);

@@ -52,7 +52,7 @@ void print_pretty(Bitboard b);
 #define Rank7BB (Rank1BB << (8 * 6))
 #define Rank8BB (Rank1BB << (8 * 7))
 
-extern int SquareDistance[64][64];
+extern uint8_t SquareDistance[64][64];
 
 extern Bitboard SquareBB[64];
 extern Bitboard FileBB[8];
@@ -169,19 +169,21 @@ INLINE Bitboard between_bb(Square s1, Square s2)
 }
 
 
-// forward_ranks_bb() returns a bitboard representing all the squares on all the ranks
-// in front of the given one, from the point of view of the given color. For
-// instance, forward_ranks_bb(BLACK, SQ_D3) will return the 16 squares on ranks 1 and 2.
+// forward_ranks_bb() returns a bitboard representing all the squares on
+// all the ranks in front of the given one, from the point of view of the
+// given color. For instance, forward_ranks_bb(BLACK, RANK_3) will return
+// the squares on ranks 1 and 2.
 
-INLINE Bitboard forward_ranks_bb(unsigned c, Square s)
+INLINE Bitboard forward_ranks_bb(unsigned c, unsigned r)
 {
-  return ForwardRanksBB[c][rank_of(s)];
+  return ForwardRanksBB[c][r];
 }
 
 
-// forward_file_bb() returns a bitboard representing all the squares along the line
-// in front of the given one, from the point of view of the given color:
-// ForwardFileBB[c][s] = forward_ranks_bb(c, s) & file_bb(s)
+// forward_file_bb() returns a bitboard representing all the squares
+// along the line in front of the given one, from the point of view of
+// the given color:
+//     ForwardFileBB[c][s] = forward_ranks_bb(c, rank_of(s)) & file_bb(s)
 
 INLINE Bitboard forward_file_bb(unsigned c, Square s)
 {
@@ -192,7 +194,7 @@ INLINE Bitboard forward_file_bb(unsigned c, Square s)
 // pawn_attack_span() returns a bitboard representing all the squares
 // that can be attacked by a pawn of the given color when it moves along
 // its file, starting from the given square:
-//      PawnAttackSpan[c][s] = forward_ranks_bb(c, s) & adjacent_files_bb(s);
+//     PawnAttackSpan[c][s] = forward_ranks_bb(c, rank_of(s)) & adjacent_files_bb(s);
 
 INLINE Bitboard pawn_attack_span(unsigned c, Square s)
 {
@@ -202,7 +204,7 @@ INLINE Bitboard pawn_attack_span(unsigned c, Square s)
 
 // passed_pawn_mask() returns a bitboard mask which can be used to test
 // if a pawn of the given color and on the given square is a passed pawn:
-//     PassedPawnMask[c][s] = pawn_attack_span(c, s) | forward_file_bb(c, s)
+//     PassedPawnMask[c][s] = pawn_attack_span(c, s) | forward_bb(c, s)
 
 INLINE Bitboard passed_pawn_mask(unsigned c, Square s)
 {
@@ -243,6 +245,8 @@ INLINE unsigned distance_r(Square x, Square y)
 #include "magic-fancy.h"
 #elif defined(MAGIC_PLAIN)
 #include "magic-plain.h"
+#elif defined(MAGIC_BLACK)
+#include "magic-black.h"
 #elif defined(BMI2_FANCY)
 #include "bmi2-fancy.h"
 #elif defined(BMI2_PLAIN)

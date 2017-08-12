@@ -375,7 +375,7 @@ INLINE Score evaluate_king(const Pos *pos, EvalInfo *ei, int Us)
     // later into a king danger score. The initial value is based on the
     // number and types of the enemy's attacking pieces, the number of
     // attacked and weak squares around our king, the absence of queen and
-    // the quality of the pawn shelter (current 'score' value).
+    // and the quality of the pawn shelter (current 'score' value).
     kingDanger =  ei->kingAttackersCount[Them] * ei->kingAttackersWeight[Them]
                 + 102 * ei->kingAdjacentZoneAttacksCount[Them]
                 + 201 * popcount(kingOnlyDefended)
@@ -467,7 +467,7 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
   const int Up    = (Us == WHITE ? DELTA_N  : DELTA_S);
   const int Left  = (Us == WHITE ? DELTA_NW : DELTA_SE);
   const int Right = (Us == WHITE ? DELTA_NE : DELTA_SW);
-  const Bitboard TRank3BB = (Us == WHITE ? Rank3BB : Rank6BB);
+  const Bitboard TRank3BB = (Us == WHITE ? Rank3BB  : Rank6BB);
 
   enum { Minor, Rook };
 
@@ -528,15 +528,16 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
       score += ThreatByKing[!!more_than_one(b)];
   }
 
-  // Find squares where our pawns can push on the next move
-  b = shift_bb(Up, pieces_cp(Us, PAWN)) & ~pieces();
+  // Find the squares reachable by a single pawn push
+  b  = shift_bb(Up, pieces_cp(Us, PAWN)) & ~pieces();
   b |= shift_bb(Up, b & TRank3BB) & ~pieces();
 
-  // Keep only the squares which are not completely unsafe
-  b &= ~ei->attackedBy[Them][PAWN]
+  // Keep only those squares which are not completely unsafe
+  b &=  ~pieces()
+      & ~ei->attackedBy[Them][PAWN]
       & (ei->attackedBy[Us][0] | ~ei->attackedBy[Them][0]);
 
-  // Add a bonus for each new pawn threats from those squares
+  // Add a bonus for each new pawn threat from those squares
   b =  (shift_bb(Left, b) | shift_bb(Right, b))
      &  pieces_c(Them)
      & ~ei->attackedBy[Us][PAWN];
@@ -552,8 +553,8 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 
 INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
 {
-  const int Them = (Us == WHITE ? BLACK : WHITE);
-  const int Up   = (Us == WHITE ? DELTA_N  : DELTA_S);
+  const int Them = (Us == WHITE ? BLACK   : WHITE);
+  const int Up   = (Us == WHITE ? DELTA_N : DELTA_S);
 
   Bitboard b, bb, squaresToQueen, defendedSquares, unsafeSquares;
   Score score = SCORE_ZERO;
@@ -619,7 +620,8 @@ INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
 
     // Scale down bonus for candidate passers which need more than one
     // push to become passed or have a pawn in front of them.
-    if (!pawn_passed(pos, Us, s + Up) || (pieces_p(PAWN) & forward_file_bb(Us, s)))
+    if (   !pawn_passed(pos, Us, s + Up)
+        || (pieces_p(PAWN) & forward_file_bb(Us, s)))
     {
       mbonus /= 2;
       ebonus /= 2;

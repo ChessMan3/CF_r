@@ -177,8 +177,8 @@ Value EvaluateKXK(const Pos *pos, unsigned strongSide)
   Bitboard bb = pieces_c(strongSide);
   if (   (pieces_pp(QUEEN, ROOK) & bb)
       || ((pieces_p(BISHOP) & bb) && (pieces_p(KNIGHT) & bb))
-      || ((pieces_p(BISHOP) & bb & DarkSquares)
-                   && (pieces_p(BISHOP) & bb & LightSquares)))
+      || (   (pieces_p(BISHOP) & bb & DarkSquares)
+          && (pieces_p(BISHOP) & bb & LightSquares)))
     result = min(result + VALUE_KNOWN_WIN, VALUE_MATE_IN_MAX_PLY - 1);
 
   return strongSide == pos_stm() ? result : -result;
@@ -663,7 +663,7 @@ int ScaleKPsK(const Pos *pos, unsigned strongSide)
 
   // If all pawns are ahead of the king, on a single rook file and
   // the king is within one file of the pawns, it's a draw.
-  if (   !(pawns & ~forward_ranks_bb(weakSide, ksq))
+  if (   !(pawns & ~forward_ranks_bb(weakSide, rank_of(ksq)))
       && !((pawns & ~FileABB) && (pawns & ~FileHBB))
       &&  distance_f(ksq, lsb(pawns)) <= 1)
     return SCALE_FACTOR_DRAW;
